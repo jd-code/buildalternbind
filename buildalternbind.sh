@@ -190,7 +190,7 @@ ENDOFAPPARMADD
 fi							    &&
 echo							    &&
 echo "in order to activate bind9-${BINDTAG}, you may :"	    &&
-echo "update-rc.d bind9-${BINDTAG} start 17 2 3 4 5 . stop 02 0 1 6"	&&
+echo "update-rc.d bind9-${BINDTAG} start 17 2 3 4 5 . stop 02 0 1 6 ."	&&
 echo									&&
 echo done
 
