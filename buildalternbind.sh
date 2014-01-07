@@ -17,7 +17,7 @@ checkfordisttemplates () {
 
     for TEMPLATESRC in		\
 	/etc/bind-dist		\
-	/etc/init.d/bind9-dist
+	/etc/init.d/bind9
     do
 	if [ ! -e "${TEMPLATESRC}" ]
 	then
@@ -61,6 +61,14 @@ checkifpreviousexist () {
 
 if [ ! "${BINDTAG}" ]
 then
+    echo "missing instance name"
+    usage
+    exit 1
+fi
+
+if [ ! "${RNDCPORT}" ]
+then
+    echo "missing rndc port number"
     usage
     exit 1
 fi
@@ -86,7 +94,7 @@ find /etc/bind-dist -type f | while read NOM
 do
     SHORTNAME=`echo "$NOM" | rev | cut -d/ -f1 | rev`
     sed 's_/etc/bind_/etc/bind-'"${BINDTAG}"'_g' "${NOM}" |
-    sed 's_/var/cache/bind_/var/cache/bind-'"${BINDTAG}"'g_' > \
+    sed 's_/var/cache/bind_/var/cache/bind-'"${BINDTAG}"'_g' > \
     "/etc/bind-${BINDTAG}"/"${SHORTNAME}"
 done							    &&
 cp -a  "named.conf.local" "named.conf.local-noky"	    &&
@@ -138,16 +146,48 @@ RNDC_OPTIONS="-c /etc/bind-INSTANCENAME/rndc.conf"
 
 ENDOFETCDEFAULT
 ) > "/etc/default/bind9-${BINDTAG}"			    &&
-cat /etc/init.d/bind9-dist |
+cat /etc/init.d/bind9      |
 sed 's_^# Provides:.*$_# Provides: bind9-'"${BINDTAG}"'_'	|
 sed 's_/etc/default/bind9_/etc/default/bind9-'"${BINDTAG}"'_g'	|
 sed 's_/var/run/named_/var/run/named-'"${BINDTAG}"'_g'		|
 sed 's_"bind9"_"bind9-'"${BINDTAG}"'"_g'			|
-sed 's@/usr/sbin/rndc@/usr/sbin/rndc \$RNDC_OPTIONS@g'  	> \
+sed 's@/usr/sbin/rndc\s*stop@/usr/sbin/rndc \$RNDC_OPTIONS stop@g'  	|
+sed 's@/usr/sbin/rndc\s*reload@/usr/sbin/rndc \$RNDC_OPTIONS reload@g'  	> \
 "/etc/init.d/bind9-${BINDTAG}"				    &&
+chmod 755 "/etc/init.d/bind9-${BINDTAG}"		    &&
 ls -ld	"/etc/bind-${BINDTAG}"/*			    &&
 ls -l	"/etc/default/bind9-${BINDTAG}" \
 	"/etc/init.d/bind9-${BINDTAG}"			    &&
+if [ -f /etc/apparmor.d/usr.sbin.named ]
+then
+ BAKSTAMP=`date "+%Y%m%d-%H%M"`				    &&
+ cp -a /etc/apparmor.d/usr.sbin.named \
+    /etc/apparmor/usr.sbin.named-orig-"${BAKSTAMP}"	    &&
+ sed '/^}/q' /etc/apparmor/usr.sbin.named-orig-"${BAKSTAMP}" |
+ grep -v '^}' > /etc/apparmor.d/usr.sbin.named		    &&
+ ( cat << 'ENDOFAPPARMADD'
+  # addition for instance bind9-INSTANCE
+  /etc/bind-INSTANCE/** r,
+  /var/lib/bind-INSTANCE/ rw,
+  /var/lib/bind-INSTANCE/** rw,
+  /var/cache/bind-INSTANCE/** rw,
+  /var/cache/bind-INSTANCE/ rw,
+  /{,var/}run/named-INSTANCE/named.pid w,
+  /{,var/}run/named-INSTANCE/session.key w,
+}
+ENDOFAPPARMADD
+) | sed 's/INSTANCE/'"${BINDTAG}"'/' \
+  >> /etc/apparmor.d/usr.sbin.named			    &&
+  echo							    &&
+  echo apparmord additions '!!!' :			    &&
+  echo diff /etc/apparmor/usr.sbin.named-orig-"${BAKSTAMP}" \
+    /etc/apparmor.d/usr.sbin.named			    &&
+  diff /etc/apparmor/usr.sbin.named-orig-"${BAKSTAMP}" \
+    /etc/apparmor.d/usr.sbin.named			    
+  echo							    &&
+  echo apply with : service apparmor reload		    &&
+  echo
+fi							    &&
 echo							    &&
 echo "in order to activate bind9-${BINDTAG}, you may :"	    &&
 echo "update-rc.d bind9-${BINDTAG} start 17 2 3 4 5 . stop 02 0 1 6"	&&
