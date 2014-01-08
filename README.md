@@ -3,8 +3,8 @@
 buildalternbind is a nifty script for building autonomous additionnal runtime
 environment for the bind/named DNS-server daemon.
 Such additionnal instances are often needed for testing parameters, weird
-recursion, local spoofing, local resolution that must stay private and
-whose operations should stay apart of public dns-resolutions, for internal
+recursions, local spoofing, local resolutions that must stay private or
+daemons whose operations should stay apart of public dns-resolutions, for internal
 production environment, or VPN zones.
 It's also convenient to mitigate restart troubles within different sets
 of zone deliveries
@@ -101,3 +101,5 @@ update-rc.d bind9-mytest start 17 2 3 4 5 . stop 02 0 1 6 .
 done
 
 ```
+
+2008 - Jean-Daniel Pauget
