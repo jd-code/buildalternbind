@@ -1,32 +1,35 @@
 # buildalternbind : building alternative runtime instances of bind #
 
-buildalternbind is a nifty script for building autonomous additionnal runtime
+**buildalternbind** is a nifty script for building autonomous additionnal runtime
 environment for the bind/named DNS-server daemon.
+
 Such additionnal instances are often needed for testing parameters, weird
 recursions, local spoofing, local resolutions that must stay private or
 daemons whose operations should stay apart of public dns-resolutions, for internal
 production environment, or VPN zones.
+
 It's also convenient to mitigate restart troubles within different sets
 of zone deliveries
 
 # Usage #
 ### prerequesites ###
-the script needs some original content of /etc/bind configuration directory
+the script needs some original content of `/etc/bind` configuration directory
 with permissions correctly set. For that purpose a "template" directory
-named /etc/bind-dist should lay in /etc, usually a fresh copy of the
-distribution-supplied directory is the best, right after installing the
+named `/etc/bind-dist` should lay in `/etc` ; usually a fresh copy of the
+distribution-supplied directory is the best. Right after installing the
 package bind9, simply copy it :
 ```
 cp -a /etc/bind /etc/bind-dist
 ```
 ### regular use ###
-Then, in order to create a new instance called mytest, one should simply :
+Then, in order to create a new instance called **mytest**, one should simply :
 ```
 buildalternbind.sh mytest 954
 ```
-The 954 is the dedicated port that the daemon would listen on 127.0.0.1:954
-for rndc controlling. it must of course be unique on one machine.
-Then tuning the listen and like entries of /etc/bind-mytest/named.conf.options is
+The **954** is the dedicated port that the daemon would listen on `127.0.0.1:954`
+for rndc controlling. It must of course be unique on one machine.
+
+Then tuning the listen and like entries of `/etc/bind-mytest/named.conf.options` is
 mandatory. Be carefull of default bind settings that listen on all available
 addresses that will certainly collide here !
 ```
@@ -41,7 +44,7 @@ update-rc.d bind9-mytest start 17 2 3 4 5 . stop 02 0 1 6 .
 
 ### permission troubles with apparmor ###
 
-At will you may restart the apparmord to activate the mandatory changes if needed :
+At will, you may restart the apparmord to activate the mandatory changes if needed :
 ```
 # check the diff between old and new policies :
 vimdiff usr.sbin.named-orig-20140107-1324 /etc/apparmor.d/usr.sbin.named
@@ -54,7 +57,7 @@ service apparmor reload
 # output example : #
 buildalternbind checks for previous instances installation and needed source templates
 before processing any addition.
-It then reports all new files in /etc, diffs in apparmor (if suitable) and updaterc
+It then reports all new files in `/etc`, diffs in **apparmor** (if suitable) and **updaterc**
 suggestions :
 ```
 root@machine#  ./buildalternbind.sh mytest 950
@@ -102,4 +105,4 @@ done
 
 ```
 
-2008 - Jean-Daniel Pauget
+2008 - *Jean-Daniel Pauget*
